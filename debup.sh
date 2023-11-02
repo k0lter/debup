@@ -65,7 +65,10 @@ log_warn() {
 }
 
 overwrite() {
-    echo -e "\r\033[1A\033[0K$@"
+    local data="$(echo -n ${@})" # trim
+    if [ -n "${data}" ]; then
+        echo -e "\r\033[1A\033[0K${data}"
+    fi
 }
 
 
@@ -132,6 +135,8 @@ upgrade_packages() {
         echo
         apt \
             -qq -y \
+            -o 'Dpkg::Options::="--force-confdef"' \
+            -o 'Dpkg::Options::="--force-confold"' \
             -o 'Apt::Cmd::Disable-Script-Warning=true' \
             -o 'Dpkg::Progress-Fancy=0' \
             -o 'Dpkg::Use-Pty=0' \
@@ -164,7 +169,7 @@ purge_packages() {
         -o 'Apt::Cmd::Disable-Script-Warning=true' \
         -o 'Dpkg::Progress-Fancy=0' \
         -o 'Dpkg::Use-Pty=0' \
-        install ${@} | \
+        purge ${@} | \
         while read line ; do
             overwrite "${line}"
         done
@@ -207,9 +212,9 @@ clean_orphaned() {
 cleanup() {
     local packages=
     # Old PHP5 packages
-    packages="${packages} $(dpkg -l 'php5-*' 2>/dev/null| tr -s ' ' | cut -d ' ' -f2 | xargs)"
+    packages="${packages} $(dpkg -l 'php5-*' 2>/dev/null | grep '^ii' | tr -s ' ' | cut -d ' ' -f2 | xargs)"
     # Not fully removed packages
-    packages="${packages} $(dpkg -l 2>/dev/null| grep '^rc' | tr -s ' ' | cut -d ' ' -f2 | xargs)"
+    packages="${packages} $(dpkg -l 2>/dev/null | grep '^rc' | tr -s ' ' | cut -d ' ' -f2 | xargs)"
 
     packages="$(echo -n "${packages}" | sed -E 's/^\s+//;s/\s+$//')"
     if [ -n "${packages}" ]; then
