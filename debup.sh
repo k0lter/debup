@@ -135,15 +135,19 @@ upgrade_packages() {
         echo
         apt \
             -qq -y \
-            -o 'Dpkg::Options::="--force-confdef"' \
-            -o 'Dpkg::Options::="--force-confold"' \
+            -o 'Dpkg::Options::=--force-confdef' \
+            -o 'Dpkg::Options::=--force-confold' \
             -o 'Apt::Cmd::Disable-Script-Warning=true' \
             -o 'Dpkg::Progress-Fancy=0' \
             -o 'Dpkg::Use-Pty=0' \
             "${cmd}" | \
-            while read line ; do
-                overwrite "${line}"
-            done
+                while read line ; do
+                    overwrite "${line}"
+                done
+        if [ "${?}" != 0 ]; then
+            log_error "Upgrade failed, check errors..."
+            exit 1
+        fi
     done
 }
 
@@ -224,6 +228,8 @@ cleanup() {
 
 export DEBIAN_FRONTEND=noninteractive
 export UCF_FORCE_CONFFOLD=1
+#export DPKG_DEBUG=77777
+#export DPKG_MAINTSCRIPT_DEBUG=1
 
 prelease=$(lsb_release --short --codename)
 nrelease=$(next_release "${prelease}")
