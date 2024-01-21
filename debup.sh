@@ -105,6 +105,7 @@ update_sources() {
             if grep -q "${previous_release}" "${i}" ; then
                 log_debug "Updating Debian sources from ${i}"
                 sed -i -E "s/${previous_release}/${release}/g" "${i}"
+                sed -i -E "s/archive\.debian\.org/deb.debian.org/g" "${i}"
                 if [ "${i}" = '/etc/apt/sources.list' ]; then
                     if [ "${release}" = "bullseye" ] ; then
                         log_debug "Updating Debian sources for ${release} from ${i}"
